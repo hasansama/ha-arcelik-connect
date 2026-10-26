@@ -9,7 +9,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.exceptions import HomeAssistantError
 
-from .api import CosaApi
+from .api import CosaApi, CosaRejected
 from .const import DOMAIN, POLL_SECONDS
 
 PLATFORMS = ["climate", "select"]
@@ -20,11 +20,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = CosaApi(async_get_clientsession(hass), entry.data["email"], entry.data["password"])
     device_id = entry.data["device_id"]
 
+    consecutive_state_rejections = 0
+    last_good_state = None
+
     async def async_update():
+        nonlocal consecutive_state_rejections, last_good_state
         try:
-            return await api.status(device_id)
+            state = await api.status(device_id)
+        except CosaRejected as exc:
+            if exc.code == 100 and last_good_state is not None and consecutive_state_rejections < 2:
+                consecutive_state_rejections += 1
+                _LOGGER.warning(
+                    "COSA %s durum sorgusu geçici olarak reddedildi (100); "
+                    "son bilinen durum korunuyor (%d/2)",
+                    entry.title,
+                    consecutive_state_rejections,
+                )
+                return last_good_state
+            raise UpdateFailed(str(exc)) from exc
         except HomeAssistantError as exc:
             raise UpdateFailed(str(exc)) from exc
+        consecutive_state_rejections = 0
+        last_good_state = state
+        return state
 
     coordinator = DataUpdateCoordinator(
         hass,
