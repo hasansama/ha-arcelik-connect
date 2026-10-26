@@ -26,7 +26,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class AtlasClimate(CoordinatorEntity, ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.DRY, HVACMode.FAN_ONLY]
     _attr_fan_modes = list(FAN_SPEED)
     _attr_min_temp = 16
@@ -59,11 +59,11 @@ class AtlasClimate(CoordinatorEntity, ClimateEntity):
         return MODES.get(name)
 
     @property
-    def native_current_temperature(self):
+    def current_temperature(self):
         return self._data.get("temperature")
 
     @property
-    def native_target_temperature(self):
+    def target_temperature(self):
         if self._data.get("acMode") in (1, 2):
             return 25
         return self._data.get("targetTemperature")
