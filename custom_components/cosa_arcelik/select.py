@@ -42,3 +42,8 @@ class AtlasVane(CoordinatorEntity, SelectEntity):
             **(self.coordinator.data or {}),
             self.field: self.mapping[option],
         })
+        try:
+            confirmed = await self.api.status(self.device_id)
+        except HomeAssistantError:
+            return
+        self.coordinator.async_set_updated_data(confirmed)
