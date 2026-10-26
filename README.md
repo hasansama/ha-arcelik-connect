@@ -36,8 +36,8 @@ Alternatif: `custom_components/cosa_arcelik` dizinini Home Assistant'ın `/confi
 
 ## Kullanım ve mimari
 
-- `climate` varlığı: açma/kapama, HVAC modu, hedef sıcaklık ve fan hızı.
-- `select` varlıkları: **Çalışma modu**, **Dikey kanat**, **Yatay kanat**.
+- `climate` varlığı: açma/kapama, HVAC modu, hedef sıcaklık, fan hızı, **dikey ve yatay kanat konumları** (standart Home Assistant swing kontrolleri).
+- `select` varlıkları: **Çalışma modu**, **Dikey kanat**, **Yatay kanat**. Kanat seçicilerinin yanı sıra klima kartının desteklediği salınım kontrolleri de kullanılabilir; görünürlük kullanılan kartın özelliklerine bağlıdır.
 - Nem alma ve fan modlarında hedef sıcaklık **25 °C sabit** gösterilir, değiştirilmez.
 - COSA API: `https://kiwi.cosa.com.tr/api`; `provider: arcelik`.
 - Komutlar `sendACState` üzerinden gönderilir; kabul edilen komut sonrasında panel yerel olarak güncellenir ve `getEndpoint` ile hemen doğrulama denenir.
