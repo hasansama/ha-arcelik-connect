@@ -47,7 +47,8 @@ class CosaVane(CoordinatorEntity, SelectEntity):
             confirmed = await self.api.status(self.device_id)
         except HomeAssistantError:
             return
-        self.coordinator.async_set_updated_data(confirmed)
+        if confirmed.get(self.field) == self.mapping[option]:
+            self.coordinator.async_set_updated_data(confirmed)
 
 
 # Home Assistant's built-in HVACMode.DRY label is translated globally as
@@ -97,4 +98,6 @@ class CosaOperatingMode(CoordinatorEntity, SelectEntity):
             confirmed = await self.api.status(self.device_id)
         except HomeAssistantError:
             return
-        self.coordinator.async_set_updated_data(confirmed)
+        if all(confirmed.get(field) == local.get(field) for field in
+               (("acPower",) if option == "Kapalı" else ("acPower", "acMode"))):
+            self.coordinator.async_set_updated_data(confirmed)
