@@ -83,10 +83,13 @@ class AtlasClimate(CoordinatorEntity, ClimateEntity):
         name = INV_MODES.get(hvac_mode)
         if name is None:
             raise HomeAssistantError("Desteklenmeyen çalışma modu")
+        # A mode command may also turn the physical AC on. Refresh first,
+        # rather than issuing a redundant power-on command from stale state.
         await self.api.command(self.device_id, "acMode", MODE_TO_CODE[name])
+        await self.coordinator.async_request_refresh()
         if self._data.get("acPower") == 0:
             await self.api.command(self.device_id, "acPower", 1)
-        await self.coordinator.async_request_refresh()
+            await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self):
         await self._send("acPower", 1)
