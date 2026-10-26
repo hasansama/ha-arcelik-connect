@@ -8,6 +8,14 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import API_ROOT, PROVIDER
 
 
+class CosaRejected(HomeAssistantError):
+    """COSA application-level rejection with a numeric code."""
+
+    def __init__(self, code):
+        self.code = code
+        super().__init__(f"COSA işlemi reddetti (kod: {code})")
+
+
 class CosaApi:
     def __init__(self, session: aiohttp.ClientSession, email: str, password: str):
         self.session = session
@@ -40,7 +48,7 @@ class CosaApi:
                 self.token = None
                 await self.login()
                 continue
-            raise HomeAssistantError(f"COSA işlemi reddetti (kod: {data.get('code')})")
+            raise CosaRejected(data.get("code"))
         raise HomeAssistantError("COSA isteği başarısız")
 
     async def login(self):
