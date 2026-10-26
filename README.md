@@ -2,7 +2,7 @@
 
 Home Assistant için **resmî olmayan**, deneysel Arçelik Connect / COSA bulut entegrasyonu.
 
-Arçelik 12556 (Atlas) klima üzerinde geliştirilmiş ve Home Assistant Container **2026.10.1** üzerinde temel işlevleri çalışırken gözlemlenmiştir. Henüz başka modellerde denenmemiştir.
+Arçelik 12556 model klima üzerinde geliştirilmiş ve Home Assistant Container **2026.10.1** üzerinde temel işlevleri çalışırken gözlemlenmiştir. Henüz başka modellerde denenmemiştir.
 
 ![Arçelik Connect simgesi](custom_components/cosa_arcelik/brand/icon.png)
 
