@@ -1,4 +1,4 @@
-"""Atlas climate entity."""
+"""COSA climate entity."""
 from __future__ import annotations
 
 from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature, HVACMode
@@ -22,10 +22,10 @@ REV_FAN = {value: key for key, value in FAN_SPEED.items()}
 
 async def async_setup_entry(hass, entry, async_add_entities):
     api, coordinator, device_id = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([AtlasClimate(api, coordinator, device_id, entry.title)])
+    async_add_entities([CosaClimate(api, coordinator, device_id, entry.title)])
 
 
-class AtlasClimate(CoordinatorEntity, ClimateEntity):
+class CosaClimate(CoordinatorEntity, ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -97,7 +97,7 @@ class AtlasClimate(CoordinatorEntity, ClimateEntity):
         name = INV_MODES.get(hvac_mode)
         if name is None:
             raise HomeAssistantError("Desteklenmeyen çalışma modu")
-        # Observed COSA behavior: mode selection turns Atlas on.
+        # Observed COSA behavior: mode selection turns the AC on.
         # Do not send a redundant power command based on stale state.
         await self._send("acMode", MODE_TO_CODE[name], extra={"acPower": 1})
 
