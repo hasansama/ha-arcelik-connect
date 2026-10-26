@@ -1,30 +1,62 @@
-# Arçelik Connect / COSA — Home Assistant özel entegrasyonu (0.1.0)
+# Arçelik Connect (COSA) – Home Assistant
 
-Arçelik Connect uygulamasının özel COSA bulut API'siyle hazırlanan **deneysel**, resmi olmayan entegrasyon.
+Home Assistant için **resmî olmayan**, deneysel Arçelik Connect / COSA bulut entegrasyonu.
 
-## Kurulum
-1. `custom_components/cosa_arcelik` klasörünü Home Assistant yapılandırma klasörüne kopyalayın.
-2. Home Assistant'ı yeniden başlatın.
-3. Ayarlar → Cihazlar ve Hizmetler → Entegrasyon Ekle → **Arçelik Connect (COSA)**.
-4. Hesabınızla giriş yapın ve klimayı seçin.
+Arçelik 12556 (Atlas) klima üzerinde geliştirilmiş ve Home Assistant Container **2026.10.1** üzerinde temel işlevleri çalışırken gözlemlenmiştir. Henüz başka modellerde denenmemiştir.
 
-## Özellikler
-- Klima aç/kapat; soğutma, ısıtma, nem alma ve fan modu.
-- Ortam/hedef sıcaklığı; nem alma ve fan modunda hedef 25 °C, değiştirilemez.
-- Fan hızı 1–5.
-- İki bağımsız kanat seçici: dikey ve yatay.
-- Bulut durumu 30 saniyede bir yenilenir.
+![Arçelik Connect simgesi](custom_components/cosa_arcelik/brand/icon.png)
 
-## API ve eşleştirmeler
-- Doğrulanan komutlar: `acPower`, `acMode`, `targetTemperature`.
-- APK'dan bulunan fan kodları: gösterilen hız 1–5 → API kodu 2–6.
-- Dikey kanat: kullanıcı 1–6 → API 6–1; otomatik = 100.
-- Yatay kanat: 13 tam sol, 35 tam sağ, 1–5 ara konum, 100 otomatik. Ara konumların fiziksel yönleri henüz test edilmedi.
-- Kanat ve fan komutları fiziksel cihazda henüz ayrı ayrı doğrulanmadı.
-- Sıcaklık sınırları 16–30 °C ilk sürüm varsayımıdır.
+## Özellikler ve doğrulama
 
-## Güvenlik ve durum
-- COSA tarafından yayımlanan resmî bir API olmadığı için haber verilmeksizin değişebilir.
-- Kullanıcı bilgileri Home Assistant yapılandırma girişinde tutulur. `.storage` dosyalarını ve token/şifreleri GitHub'a yüklemeyin.
-- Home Assistant içinde henüz çalıştırılıp test edilmedi. Ev sisteminde kullanmadan önce gözlemleyerek doğrulayın.
-- Resmî Home Assistant veya Arçelik entegrasyonu değildir.
+| Özellik | Durum |
+| --- | --- |
+| COSA hesabıyla giriş ve cihaz keşfi | Doğrulandı |
+| Home Assistant içinde klima cihazı oluşturma | Doğrulandı |
+| Klima açma / kapama | Fiziksel klimada doğrulandı |
+| Soğutma, ısıtma, nem alma | Mod komutları ve HA üzerinden çalışma gözlemlendi |
+| Fan modu | Entegrasyonda mevcut, ayrı fiziksel test gerekli |
+| Hedef sıcaklık değiştirme | COSA ve cihaz durumunda doğrulandı |
+| Ortam sıcaklığını okuma | Doğrulandı |
+| Fan hızı 1–5 | APK dönüşümü kodlandı, fiziksel hız testleri tamamlanmadı |
+| Dikey/yatay kanat seçimleri | API alanları mevcut; konum kodları ve davranışları bütünüyle test edilmedi |
+| Home Assistant üzerinden komut sonrası hızlı panel güncellemesi | Kodlandı, tüm durumlarda doğrulama sürüyor |
+
+Home Assistant içinde `climate` ve `select` varlıkları bulunur. `Çalışma modu` seçicisindeki Türkçe etiketler: **Kapalı, Soğutma, Isıtma, Nem Alma, Fan**. Standart Home Assistant klima kartı, yerleşik `dry` modunu sistem çevirisi nedeniyle hâlâ **Kuru** diye gösterebilir; bu entegrasyonla yerleşik çeviriyi değiştirmiyoruz.
+
+## Kurulum: HACS
+
+1. HACS → sağ üst menü → **Custom repositories / Özel depolar**.
+2. `https://github.com/hasansama/ha-arcelik-connect` adresini **Integration** türüyle ekleyin.
+3. Entegrasyonu **Download / İndir** ile kurun. Geliştirme sürümünü yenilemek için **Redownload → main** kullanın.
+4. Home Assistant'ı yeniden başlatın.
+5. **Ayarlar → Cihazlar ve Hizmetler → Entegrasyon ekle → Arçelik Connect (COSA)**.
+6. Arçelik Connect giriş bilgilerinizi kullanın ve klimayı seçin.
+
+Alternatif: `custom_components/cosa_arcelik` dizinini Home Assistant'ın `/config/custom_components/` klasörüne kopyalayıp yeniden başlatın.
+
+## Kullanım ve mimari
+
+- `climate` varlığı: açma/kapama, HVAC modu, hedef sıcaklık ve fan hızı.
+- `select` varlıkları: **Çalışma modu**, **Dikey kanat**, **Yatay kanat**.
+- Nem alma ve fan modlarında hedef sıcaklık **25 °C sabit** gösterilir, değiştirilmez.
+- COSA API: `https://kiwi.cosa.com.tr/api`; `provider: arcelik`.
+- Komutlar `sendACState` üzerinden gönderilir; kabul edilen komut sonrasında panel yerel olarak güncellenir ve `getEndpoint` ile hemen doğrulama denenir.
+- Genel durum sorgulama aralığı **30 saniyedir**; uygulama/kumanda kaynaklı değişiklikler bu aralıkta görünür.
+- COSA bazen mod değişikliğinin hemen ardından durum sorgusuna `100` hata kodu verebilir. Geçici hatalarda son başarılı durum sınırlı sayıda korunur.
+
+## API kodları ve sınırlar
+
+- Çalışma modları: soğutma `0`, nem alma `1`, fan `2`, ısıtma `4`.
+- Fan hızı: kullanıcı 1–5 → COSA `acFanSpeed` 2–6 (APK kodundan).
+- Dikey kanat: kullanıcı konumları 1–6 → COSA 6–1; otomatik salınım `100`.
+- Yatay kanat: `13` sol, `35` sağ, `1–5` ara konumlar, `100` salınım. Yatay kanat aralıklarının fiziksel karşılıkları bütünüyle doğrulanmadı.
+- Sıcaklık aralığı `16–30 °C` şu an entegrasyondaki varsayımsal sınırdır.
+- `acPower` ve `acMode` gerçek durumu belirtir; `active` veya `operationMode` alanlarını klima güç/mod bilgisi olarak kullanmayız.
+
+## Güvenlik ve sorumluluk
+
+Bu entegrasyon **Arçelik, COSA veya Home Assistant tarafından desteklenmez**. Özel/belgelenmemiş bulut API'si zaman içinde değişebilir. Bulut ve İnternet bağlantısı gereklidir.
+
+Giriş bilgileri Home Assistant config entry içinde saklanır. Token, şifre veya Home Assistant `.storage` içeriğini GitHub'a yüklemeyin.
+
+Henüz erken geliştirme aşamasındadır. Fiziksel cihaz davranışını gözlemleyerek kullanın. Sorun bildirmek için [GitHub Issues](https://github.com/hasansama/ha-arcelik-connect/issues) kullanabilirsiniz.
