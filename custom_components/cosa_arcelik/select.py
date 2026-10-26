@@ -9,13 +9,13 @@ from .const import DOMAIN, VERTICAL, HORIZONTAL, MODE_TO_CODE, CODE_TO_MODE
 async def async_setup_entry(hass, entry, async_add_entities):
     api, coordinator, device_id = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([
-        AtlasVane(api, coordinator, device_id, "Dikey kanat", "acVerticalSwing", VERTICAL),
-        AtlasVane(api, coordinator, device_id, "Yatay kanat", "acHorizontalSwing", HORIZONTAL),
-        AtlasOperatingMode(api, coordinator, device_id),
+        CosaVane(api, coordinator, device_id, "Dikey kanat", "acVerticalSwing", VERTICAL),
+        CosaVane(api, coordinator, device_id, "Yatay kanat", "acHorizontalSwing", HORIZONTAL),
+        CosaOperatingMode(api, coordinator, device_id),
     ])
 
 
-class AtlasVane(CoordinatorEntity, SelectEntity):
+class CosaVane(CoordinatorEntity, SelectEntity):
     _attr_has_entity_name = True
     _attr_icon = "mdi:air-filter"
 
@@ -61,7 +61,7 @@ DISPLAY_MODES = {
 }
 
 
-class AtlasOperatingMode(CoordinatorEntity, SelectEntity):
+class CosaOperatingMode(CoordinatorEntity, SelectEntity):
     _attr_has_entity_name = True
     _attr_name = "Çalışma modu"
     _attr_icon = "mdi:air-conditioner"
