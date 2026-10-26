@@ -8,7 +8,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .api import CosaRejected
 
-from .const import DOMAIN, CODE_TO_MODE, MODE_TO_CODE, FAN_SPEED
+from .const import DOMAIN, CODE_TO_MODE, MODE_TO_CODE, FAN_SPEED, VERTICAL, HORIZONTAL
 
 MODES = {
     "cool": HVACMode.COOL,
@@ -31,6 +31,8 @@ class CosaClimate(CoordinatorEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT, HVACMode.DRY, HVACMode.FAN_ONLY]
     _attr_fan_modes = list(FAN_SPEED)
+    _attr_swing_modes = list(VERTICAL)
+    _attr_swing_horizontal_modes = list(HORIZONTAL)
     _attr_min_temp = 16
     _attr_max_temp = 30
     _attr_target_temperature_step = 1
@@ -48,7 +50,7 @@ class CosaClimate(CoordinatorEntity, ClimateEntity):
 
     @property
     def supported_features(self):
-        features = ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+        features = ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.SWING_MODE | ClimateEntityFeature.SWING_HORIZONTAL_MODE | ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
         if self._data.get("acMode") in (0, 4):
             features |= ClimateEntityFeature.TARGET_TEMPERATURE
         return features
@@ -73,6 +75,26 @@ class CosaClimate(CoordinatorEntity, ClimateEntity):
     @property
     def fan_mode(self):
         return REV_FAN.get(self._data.get("acFanSpeed"))
+
+    @property
+    def swing_mode(self):
+        raw = self._data.get("acVerticalSwing")
+        return next((label for label, code in VERTICAL.items() if code == raw), None)
+
+    @property
+    def swing_horizontal_mode(self):
+        raw = self._data.get("acHorizontalSwing")
+        return next((label for label, code in HORIZONTAL.items() if code == raw), None)
+
+    async def async_set_swing_mode(self, swing_mode):
+        if swing_mode not in VERTICAL:
+            raise HomeAssistantError("Bilinmeyen dikey kanat pozisyonu")
+        await self._send("acVerticalSwing", VERTICAL[swing_mode])
+
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode):
+        if swing_horizontal_mode not in HORIZONTAL:
+            raise HomeAssistantError("Bilinmeyen yatay kanat pozisyonu")
+        await self._send("acHorizontalSwing", HORIZONTAL[swing_horizontal_mode])
 
     async def _send(self, key, value, *, extra=None):
         # Update Home Assistant immediately after COSA acknowledges the command.
