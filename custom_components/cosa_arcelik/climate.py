@@ -6,6 +6,8 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.exceptions import HomeAssistantError
 
+from .api import CosaRejected
+
 from .const import DOMAIN, CODE_TO_MODE, MODE_TO_CODE, FAN_SPEED
 
 MODES = {
@@ -74,12 +76,19 @@ class AtlasClimate(CoordinatorEntity, ClimateEntity):
 
     async def _send(self, key, value, *, extra=None):
         # Update Home Assistant immediately after COSA acknowledges the command.
-        # A subsequent periodic poll (30 s) reconciles with the physical device.
         await self.api.command(self.device_id, key, value)
         state = {**self._data, key: value}
         if extra:
             state.update(extra)
         self.coordinator.async_set_updated_data(state)
+        # Immediately read back the real device state, without waiting 30 s.
+        # COSA sometimes rejects the read just after a mode transition;
+        # retain the acknowledged optimistic state in that case.
+        try:
+            confirmed = await self.api.status(self.device_id)
+        except HomeAssistantError:
+            return
+        self.coordinator.async_set_updated_data(confirmed)
 
     async def async_set_hvac_mode(self, hvac_mode):
         if hvac_mode == HVACMode.OFF:
