@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Arçelik Connect (COSA)",
+        "description": "Arçelik Connect hesabınızla giriş yapın.",
+        "data": {
+          "email": "E-posta",
+          "password": "Şifre"
+        }
+      },
+      "select_device": {
+        "title": "Klima seçin",
+        "data": {
+          "device_id": "Cihaz"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Giriş başarısız veya COSA'ya ulaşılamıyor",
+      "no_devices": "Hesapta cihaz bulunamadı"
+    }
+  }
+}
