@@ -88,7 +88,9 @@ class CosaClimate(CoordinatorEntity, ClimateEntity):
             confirmed = await self.api.status(self.device_id)
         except HomeAssistantError:
             return
-        self.coordinator.async_set_updated_data(confirmed)
+        if all(confirmed.get(field) == expected for field, expected in state.items()
+               if field == key or (extra and field in extra)):
+            self.coordinator.async_set_updated_data(confirmed)
 
     async def async_set_hvac_mode(self, hvac_mode):
         if hvac_mode == HVACMode.OFF:
