@@ -72,9 +72,14 @@ class AtlasClimate(CoordinatorEntity, ClimateEntity):
     def fan_mode(self):
         return REV_FAN.get(self._data.get("acFanSpeed"))
 
-    async def _send(self, key, value):
+    async def _send(self, key, value, *, extra=None):
+        # Update Home Assistant immediately after COSA acknowledges the command.
+        # A subsequent periodic poll (30 s) reconciles with the physical device.
         await self.api.command(self.device_id, key, value)
-        await self.coordinator.async_request_refresh()
+        state = {**self._data, key: value}
+        if extra:
+            state.update(extra)
+        self.coordinator.async_set_updated_data(state)
 
     async def async_set_hvac_mode(self, hvac_mode):
         if hvac_mode == HVACMode.OFF:
@@ -83,13 +88,9 @@ class AtlasClimate(CoordinatorEntity, ClimateEntity):
         name = INV_MODES.get(hvac_mode)
         if name is None:
             raise HomeAssistantError("Desteklenmeyen çalışma modu")
-        # A mode command may also turn the physical AC on. Refresh first,
-        # rather than issuing a redundant power-on command from stale state.
-        await self.api.command(self.device_id, "acMode", MODE_TO_CODE[name])
-        await self.coordinator.async_request_refresh()
-        if self._data.get("acPower") == 0:
-            await self.api.command(self.device_id, "acPower", 1)
-            await self.coordinator.async_request_refresh()
+        # Observed COSA behavior: mode selection turns Atlas on.
+        # Do not send a redundant power command based on stale state.
+        await self._send("acMode", MODE_TO_CODE[name], extra={"acPower": 1})
 
     async def async_turn_on(self):
         await self._send("acPower", 1)
