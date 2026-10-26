@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     entry.title,
                     consecutive_state_rejections,
                 )
-                return last_good_state
+                return coordinator.data or last_good_state
             raise UpdateFailed(str(exc)) from exc
         except HomeAssistantError as exc:
             raise UpdateFailed(str(exc)) from exc
