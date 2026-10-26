@@ -1,0 +1,12 @@
+{
+  "domain": "cosa_arcelik",
+  "name": "Arçelik Connect (COSA)",
+  "version": "0.1.0",
+  "config_flow": true,
+  "documentation": "https://github.com/hasansama/ha-arcelik-connect",
+  "issue_tracker": "https://github.com/hasansama/ha-arcelik-connect/issues",
+  "codeowners": [],
+  "iot_class": "cloud_polling",
+  "integration_type": "hub",
+  "requirements": []
+}
