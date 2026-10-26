@@ -34,7 +34,9 @@ class CosaApi:
                 raise HomeAssistantError("COSA beklenmeyen yanıt döndürdü")
             if data.get("ok") == 1:
                 return data
-            if authenticated and attempt == 0:
+            # Business rejections such as code 100 must not be replayed.
+            # Only the documented missing/invalid token code gets a new login.
+            if authenticated and attempt == 0 and data.get("code") == 111:
                 self.token = None
                 await self.login()
                 continue
