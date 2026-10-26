@@ -38,4 +38,7 @@ class AtlasVane(CoordinatorEntity, SelectEntity):
         if option not in self.mapping:
             raise HomeAssistantError("Bilinmeyen kanat pozisyonu")
         await self.api.command(self.device_id, self.field, self.mapping[option])
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_set_updated_data({
+            **(self.coordinator.data or {}),
+            self.field: self.mapping[option],
+        })
